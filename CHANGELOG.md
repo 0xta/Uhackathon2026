@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Pioneer Incentive Simplification**:
+  - Deprecated the complex 5% royalty pool distribution from merchant bounties to eliminate on-chain loop overhead and keep math simple.
+  - Implemented **Pioneer 2x Multiplier**: When a user is confirmed as one of the 3 Pioneers for a venue, their daily activity points for that review are doubled (**2x points**), granting them double pro-rata share in the 10,000 $TASTE daily mining pool.
+
 ### Planned
 - **Phase 1: Project Scaffolding & Database Service Layer**
   - Next.js 14+ (App Router) + Tailwind CSS + DaisyUI initialization
