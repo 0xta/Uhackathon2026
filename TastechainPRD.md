@@ -800,11 +800,14 @@ sequenceDiagram
 1. **Anti-Replay on Front-Shop QR:**
    * Dynamic Nonce หรือ Rotating Timestamp: URL ของ QR หน้าร้านสร้างด้วย HMAC Key เฉพาะของร้าน หมดอายุใน 5 นาที หรือใช้พิกัด Geofence บังคับ $\le 100$ เมตร
    * Rate Limit: 1 กระเป๋า ต่อ 1 ร้าน ต่อ 24 ชั่วโมง
-2. **Anti-Replay on PromptPay Slips:**
+2. **Anti-Sybil & Review Rate Limiting:**
+   * **โควต้ารีวิว:** ผู้ใช้ 1 กระเป๋า สามารถรีวิวได้ **ไม่เกิน 3 ครั้ง / ร้าน / วัน** และ **รวมทั้งหมดไม่เกิน 10 ครั้ง / วัน** ทั่วทั้งระบบ
+   * บังคับใช้ทั้งระดับ Backend / PostgreSQL API และระดับ On-chain Smart Contract (`TasteChainRegistry.sol`: `MAX_REVIEWS_PER_PLACE_PER_DAY = 3`, `MAX_REVIEWS_PER_DAY = 10`)
+3. **Anti-Replay on PromptPay Slips:**
    * คำนวณ `SHA-256(transaction_ref_id)` และตรวจซ้ำทั้งในระดับฐานข้อมูล (`UNIQUE CONSTRAINT`) และในระดับ Smart Contract (`usedSlipHashes`)
-3. **Audio Quota Protection:**
+4. **Audio Quota Protection:**
    * แคชไฟล์เสียง ElevenLabs ลง Server/Database ทันทีที่สร้างครั้งแรก เพื่อไม่ให้เกิดค่าใช้จ่าย API ซ้ำซ้อนจากการกดฟัง
-4. **Deflationary Math Integrity:**
+5. **Deflationary Math Integrity:**
    * ทุกการแลก Promotion จะต้องผ่าน Smart Contract ที่ทำการ `burn` 20% อย่างโปร่งใส ตรวจสอบได้บน Snowtrace
 
 ---

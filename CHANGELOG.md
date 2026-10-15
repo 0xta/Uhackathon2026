@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Pioneer Incentive Simplification**:
   - Deprecated the complex 5% royalty pool distribution from merchant bounties to eliminate on-chain loop overhead and keep math simple.
   - Implemented **Pioneer 2x Multiplier**: When a user is confirmed as one of the 3 Pioneers for a venue, their daily activity points for that review are doubled (**2x points**), granting them double pro-rata share in the 10,000 $TASTE daily mining pool.
+- **Review Rate Limiting Rule**:
+  - Added strict daily review limits: **Max 3 reviews per venue per day** and **Max 10 total reviews across all venues per day** per wallet address.
+  - Enforced on-chain in `TasteChainRegistry.sol` (`MAX_REVIEWS_PER_PLACE_PER_DAY = 3`, `MAX_REVIEWS_PER_DAY = 10`) and covered with unit tests `T2.3d` and `T2.3e`.
 
 ### Planned
 - **Phase 1: Project Scaffolding & Database Service Layer**

@@ -10,6 +10,15 @@ contract TasteChainRegistry {
         uint256 totalReviews;
     }
 
+    // Rate Limits: Max 3 reviews per venue per day, max 10 total reviews per day
+    uint8 public constant MAX_REVIEWS_PER_PLACE_PER_DAY = 3;
+    uint8 public constant MAX_REVIEWS_PER_DAY = 10;
+
+    // dayIndex (timestamp / 86400) => placeHash => user => reviewCount
+    mapping(uint256 => mapping(bytes32 => mapping(address => uint8))) public dailyPlaceReviews;
+    // dayIndex => user => totalReviewCount
+    mapping(uint256 => mapping(address => uint8)) public dailyTotalReviews;
+
     // Key: keccak256(placeId) computed off-chain for gas efficiency
     mapping(bytes32 => PlaceInfo) public places;
     mapping(bytes32 => bool) public usedSlipHashes;
@@ -38,6 +47,18 @@ contract TasteChainRegistry {
         require(rating >= 1 && rating <= 5, "Invalid rating: must be 1 to 5");
         require(!usedSlipHashes[slipHash], "Slip reference has already been used");
 
+        uint256 dayIndex = block.timestamp / 86400;
+        require(
+            dailyPlaceReviews[dayIndex][placeHash][msg.sender] < MAX_REVIEWS_PER_PLACE_PER_DAY,
+            "Daily limit reached for this place (max 3/day)"
+        );
+        require(
+            dailyTotalReviews[dayIndex][msg.sender] < MAX_REVIEWS_PER_DAY,
+            "Daily platform review limit reached (max 10/day)"
+        );
+
+        dailyPlaceReviews[dayIndex][placeHash][msg.sender]++;
+        dailyTotalReviews[dayIndex][msg.sender]++;
         usedSlipHashes[slipHash] = true;
         places[placeHash].totalReviews++;
 
@@ -67,5 +88,10 @@ contract TasteChainRegistry {
 
     function isSlipUsed(bytes32 slipHash) external view returns (bool) {
         return usedSlipHashes[slipHash];
+    }
+
+    function getUserDailyReviews(address user, bytes32 placeHash) external view returns (uint8 placeReviews, uint8 totalReviews) {
+        uint256 dayIndex = block.timestamp / 86400;
+        return (dailyPlaceReviews[dayIndex][placeHash][user], dailyTotalReviews[dayIndex][user]);
     }
 }

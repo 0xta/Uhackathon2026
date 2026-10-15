@@ -155,11 +155,12 @@ git push origin main
 - Compute `SHA-256(transaction_ref_id)` to enforce zero-replay security across PostgreSQL and `TasteChainRegistry`.
 - Calculate perceptual hash (`pHash`) on food photos to prevent reused imagery.
 - Save verified reviews with On-chain transaction links (`verified_reviews`).
+- Enforce daily review quotas: max 3 reviews per venue per day, and max 10 total reviews across all venues per day.
 
 #### Deliverables
 - `src/lib/services/slip-ocr.ts`: OpenAI Vision OCR service with structured schema validation.
 - `src/lib/services/phash.ts`: Perceptual hash calculation utility.
-- `src/app/api/reviews/verify-slip/route.ts`: Verification API validating slip, checking replay, and preparing on-chain proof.
+- `src/app/api/reviews/verify-slip/route.ts`: Verification API validating slip, checking replay, checking daily quotas, and preparing on-chain proof.
 - `src/components/ReviewSubmitModal.tsx`: Multi-tier submission form (GPS $\rightarrow$ Photo $\rightarrow$ Slip $\rightarrow$ Sign).
 - `tests/phase4-slip-ocr.test.ts`: Test suite with mock/sample PromptPay slips.
 
@@ -170,6 +171,7 @@ git push origin main
 | **T4.2 Slip Anti-Replay** | Resubmit identical slip ref ID | Immediate rejection with `Slip already used` |
 | **T4.3 Food pHash** | Submit duplicate food photo | Flagged as duplicate photo if hamming distance $\le 5$ |
 | **T4.4 Registry Link** | Submit verified review with Wagmi | Transaction confirmed on Snowtrace Fuji |
+| **T4.5 Daily Quotas** | Attempt 4th review for same venue, or 11th review overall | Rejected with daily quota error (max 3/venue/day, max 10/day) |
 
 #### Git & Changelog Action
 ```bash

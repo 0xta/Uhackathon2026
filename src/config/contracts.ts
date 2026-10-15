@@ -53,6 +53,9 @@ export const REGISTRY_ABI = [
   "function getPioneers(bytes32 placeHash) view returns (address[3] pioneers, uint8 count)",
   "function getPlaceInfo(bytes32 placeHash) view returns (uint8 pioneerCount, uint256 totalReviews)",
   "function isSlipUsed(bytes32 slipHash) view returns (bool)",
+  "function getUserDailyReviews(address user, bytes32 placeHash) view returns (uint8 placeReviews, uint8 totalReviews)",
+  "function MAX_REVIEWS_PER_PLACE_PER_DAY() view returns (uint8)",
+  "function MAX_REVIEWS_PER_DAY() view returns (uint8)",
   "event PioneerRegistered(bytes32 indexed placeHash, address indexed pioneer, uint8 slotIndex)",
   "event ReviewRecorded(bytes32 indexed placeHash, address indexed reviewer, bytes32 indexed slipHash, uint8 rating, bool isPioneer)",
 ] as const;

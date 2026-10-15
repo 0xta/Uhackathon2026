@@ -189,6 +189,64 @@ describe("TasteChain Smart Contracts Suite", function () {
         registry.connect(reviewer1).recordReview(PLACE_HASH, SLIP_1, 6)
       ).to.be.revertedWith("Invalid rating: must be 1 to 5");
     });
+
+    it("T2.3d: Max 3 reviews per venue per day: 4th review for same venue reverts", async function () {
+      const slipA = ethers.keccak256(ethers.toUtf8Bytes("USER1_SLIP_A"));
+      const slipB = ethers.keccak256(ethers.toUtf8Bytes("USER1_SLIP_B"));
+      const slipC = ethers.keccak256(ethers.toUtf8Bytes("USER1_SLIP_C"));
+      const slipD = ethers.keccak256(ethers.toUtf8Bytes("USER1_SLIP_D"));
+
+      // 1st, 2nd, and 3rd reviews succeed
+      await registry.connect(reviewer1).recordReview(PLACE_HASH, slipA, 5);
+      await registry.connect(reviewer1).recordReview(PLACE_HASH, slipB, 4);
+      await registry.connect(reviewer1).recordReview(PLACE_HASH, slipC, 5);
+
+      const [placeReviews, totalReviews] = await registry.getUserDailyReviews(reviewer1.address, PLACE_HASH);
+      expect(placeReviews).to.equal(3);
+      expect(totalReviews).to.equal(3);
+
+      // 4th review for same place on same day must fail
+      await expect(
+        registry.connect(reviewer1).recordReview(PLACE_HASH, slipD, 4)
+      ).to.be.revertedWith("Daily limit reached for this place (max 3/day)");
+    });
+
+    it("T2.3e: Max 10 reviews across all venues per day: 11th review reverts", async function () {
+      // Reviewer2 reviews 3 times at place 1, 3 times at place 2, 3 times at place 3, 1 time at place 4 = 10 reviews
+      const place1 = ethers.keccak256(ethers.toUtf8Bytes("PLACE_1"));
+      const place2 = ethers.keccak256(ethers.toUtf8Bytes("PLACE_2"));
+      const place3 = ethers.keccak256(ethers.toUtf8Bytes("PLACE_3"));
+      const place4 = ethers.keccak256(ethers.toUtf8Bytes("PLACE_4"));
+      const place5 = ethers.keccak256(ethers.toUtf8Bytes("PLACE_5"));
+
+      // 3 reviews at place1
+      for (let i = 1; i <= 3; i++) {
+        const slip = ethers.keccak256(ethers.toUtf8Bytes(`P1_SLIP_${i}`));
+        await registry.connect(reviewer2).recordReview(place1, slip, 5);
+      }
+      // 3 reviews at place2
+      for (let i = 1; i <= 3; i++) {
+        const slip = ethers.keccak256(ethers.toUtf8Bytes(`P2_SLIP_${i}`));
+        await registry.connect(reviewer2).recordReview(place2, slip, 5);
+      }
+      // 3 reviews at place3
+      for (let i = 1; i <= 3; i++) {
+        const slip = ethers.keccak256(ethers.toUtf8Bytes(`P3_SLIP_${i}`));
+        await registry.connect(reviewer2).recordReview(place3, slip, 5);
+      }
+      // 1 review at place4 (total 10)
+      const slip10 = ethers.keccak256(ethers.toUtf8Bytes("P4_SLIP_1"));
+      await registry.connect(reviewer2).recordReview(place4, slip10, 5);
+
+      const [, totalReviews] = await registry.getUserDailyReviews(reviewer2.address, place4);
+      expect(totalReviews).to.equal(10);
+
+      // 11th review at place5 must fail
+      const slip11 = ethers.keccak256(ethers.toUtf8Bytes("P5_SLIP_1"));
+      await expect(
+        registry.connect(reviewer2).recordReview(place5, slip11, 5)
+      ).to.be.revertedWith("Daily platform review limit reached (max 10/day)");
+    });
   });
 
   // =========================================================================
