@@ -42,6 +42,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.1.0] - 2026-10-15 (Phase 1: Project Scaffolding & Database Service Layer)
+
+### Added
+- **Frontend & App Scaffolding**:
+  - Next.js 14 App Router project with React 18, TypeScript, Tailwind CSS v3.4, and DaisyUI v4.
+  - Custom branding colors: Avalanche Red (`#E84142`), Gastronomy Gold (`#F59E0B`), and Verified Green (`#10B981`).
+  - Responsive Navbar with Judge Demo button, logo branding, and responsive layout.
+- **PostgreSQL Database Service Layer**:
+  - `src/lib/db.ts`: Robust connection pool using `pg.Pool` connected to `uhack-postgres:5432` (`tastechain`).
+  - `src/lib/services/places.ts`: Query engine for 36,369 operational Bangkok F&B venues with multi-criteria filtering (search `q`, `service_type`, `min_rating`, `has_bounty`, `pioneer_open`, bounding boxes, and pagination).
+  - Subquery aggregates for Pioneer slot claims (0–3), active AVAX & $TASTE merchant bounties, and active promotions.
+  - `getBangkokStats()` helper for protocol-wide real-time metrics.
+- **REST API Routes**:
+  - `GET /api/places`: Dynamic search and filter API with pagination.
+  - `GET /api/places/[placeId]`: Detailed place profile API with pioneer slots, reviews, active promotions, and voice slots.
+- **Home Page (`src/app/page.tsx`)**:
+  - Hero banner with live Bangkok F&B metrics (36,369 venues, 10,000 $TASTE daily pool).
+  - Search input with category badges (`All`, `Restaurant`, `Cafe`, `Bar`, `Bakery`, `Noodle`, `Thai`).
+  - Quick filter pills (`⚡ Active Bounty`, `🏆 Pioneer Open`, `⭐ 4.5+`).
+  - Venue card grid with pioneer badges, rating, address, and review action links.
+- **Automated Verification Suite (`tests/phase1-places.test.ts`)**:
+  - 7/7 tests passed:
+    - `T1.1`: PostgreSQL connection pool connects in 27ms.
+    - `T1.2`: Bangkok operational F&B venues verified at 36,369 places.
+    - `T1.3`: Search query latency verified at 171ms (< 300ms threshold).
+    - `T1.4`: Category filter returns 100% matching venues.
+    - `T1.5`: Place detail retrieval loads all companion relations.
+- **Production Build**: Verified `npm run build` compiles with 0 errors and 0 warnings.
+
+---
+
 ## [3.0.0] - 2026-10-15
 
 ### Added
