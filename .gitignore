@@ -33,3 +33,7 @@ pnpm-debug.log*
 # OS Files
 .DS_Store
 Thumbs.db
+
+# Generated Audio Files
+public/audio/voices/*
+!public/audio/voices/.gitkeep

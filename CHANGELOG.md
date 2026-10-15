@@ -50,6 +50,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.3.0] - 2026-10-15 (Phase 3: ElevenLabs Voice Studio & Front-Shop QR Oracle)
+
+### Added
+- **ElevenLabs AI Shop Voice Studio (`src/lib/services/elevenlabs.ts`)**:
+  - Multi-persona greeting voice generator for all 36,369 Bangkok F&B venues.
+  - Generates 3 distinct greeting slots per venue:
+    - Slot 1: *Welcome Host* (Warm Thai greeting welcoming diners).
+    - Slot 2: *Chef's Special Recommendation* (House signature dish recommendation).
+    - Slot 3: *VIP Patron Gratitude* (Gratitude celebrating TasteChain diners).
+  - High-fidelity synthetic WAV audio fallback with multi-tone harmonic chime (C5-E5-G5-C6) ensuring 100% offline & test reliability when API key is unconfigured.
+  - Automated pre-seeding pipeline (`ensurePlaceVoices`) and 1-in-3 random voice dispatcher (`dispatchRandomShopVoice`) with live `play_count` tracking.
+- **Front-Shop QR Oracle & Geofencing (`src/lib/services/geofence.ts`)**:
+  - Haversine distance calculator measuring user distance to venue coordinates.
+  - Strict $\le 100\text{m}$ geofence proximity verification rejecting out-of-range scans with HTTP 403 `GEOFENCE_VIOLATION`.
+- **Daily Activity Points & 10,000 $TASTE Mining Pool (`src/lib/services/epoch.ts`)**:
+  - Front-shop QR check-in awards **3 Daily Activity Points**.
+  - Dynamic pro-rata pool calculation: $\text{user\_share} = (\text{user\_pts} / \text{total\_pts}) \times 10,000\text{ \$TASTE}$.
+  - Daily rate limit guards: **Max 3 check-ins/venue/day** (HTTP 429 `DAILY_VENUE_LIMIT_EXCEEDED`) and **Max 10 total check-ins/day** (HTTP 429 `DAILY_TOTAL_LIMIT_EXCEEDED`).
+- **REST Endpoints**:
+  - `POST /api/checkin/qr`: Front-shop QR check-in endpoint validating GPS, awarding 3 points, picking 1-of-3 voices, and recording `in_store_qr_checkins`.
+  - `GET /api/merchant/voice`: Venue voice retrieval and auto-seeding endpoint.
+  - `POST /api/merchant/voice`: Voice slot customization endpoint for merchant owners.
+- **Interactive UI Components**:
+  - `src/components/AudioGreetingPlayer.tsx`: Audio player with animated sound wave bars, Thai greeting script, confetti celebration via `canvas-confetti`, and points badge (+3 points).
+  - `src/components/QRScannerModal.tsx`: Real-time camera QR scanner using `html5-qrcode` with GPS position acquisition and instant 1-click in-store test check-in.
+  - `src/components/FrontShopQRModal.tsx`: Official merchant cashier counter QR code generator with printable display modal and check-in payload.
+  - `src/app/place/[placeId]/page.tsx` & `src/components/PlaceDetailClient.tsx`: Venue detail page with Pioneer Honor Roll (Slots 1-3 with 2x point multiplier badge), AI voice preview studio, active promotions, and check-in actions.
+- **Automated Verification Suite (`tests/phase3-audio-qr.test.ts`)**:
+  - 30/30 tests passed (100% passing rate):
+    - `T3.1`: 3 distinct voice slots synthesized, persisted to `shop_voices`, and verified on disk.
+    - `T3.2`: Random 1-in-3 dispatch distribution across multiple voice slots and play count tracking.
+    - `T3.3`: Haversine geofence verification (0m & 38.9m accepted, 333.6m rejected).
+    - `T3.4`: Activity points awarding (+3 pts) and dynamic pro-rata share calculation against 10,000 $TASTE pool.
+    - `T3.5`: HTTP API check-in end-to-end (403 for > 100m, 200 with voice dispatch for check-ins 1-3, 429 for 4th check-in).
+
+---
+
 ## [3.2.0] - 2026-10-15 (Phase 2: Smart Contracts on Avalanche Fuji)
 
 ### Added

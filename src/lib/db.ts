@@ -1,9 +1,4 @@
 import { Pool, QueryResult, QueryResultRow } from "pg";
-import dotenv from "dotenv";
-
-// Ensure environment variables are loaded
-dotenv.config({ path: ".env.local" });
-dotenv.config();
 
 const connectionString =
   process.env.DATABASE_URL ||
