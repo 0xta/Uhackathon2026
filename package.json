@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start -p 3001",
     "lint": "next lint",
-    "test:phase1": "tsx tests/phase1-places.test.ts"
+    "test:phase1": "tsx tests/phase1-places.test.ts",
+    "test:contracts": "hardhat test"
   },
   "dependencies": {
     "clsx": "^2.1.1",
@@ -20,12 +21,15 @@
     "tailwind-merge": "^2.5.5"
   },
   "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^6.1.2",
     "@types/node": "^22.10.2",
     "@types/pg": "^8.11.10",
     "@types/react": "18.3.12",
     "@types/react-dom": "18.3.1",
     "autoprefixer": "^10.4.20",
     "daisyui": "^4.12.23",
+    "ethers": "^6.17.0",
+    "hardhat": "^2.29.1",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",
     "tsx": "^4.19.2",

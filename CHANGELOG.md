@@ -47,6 +47,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.2.0] - 2026-10-15 (Phase 2: Smart Contracts on Avalanche Fuji)
+
+### Added
+- **5 Solidity 0.8.24 Smart Contracts**:
+  - `contracts/TasteToken.sol`: Protocol ERC-20 utility token ($TASTE) with minting roles, user burning, and 1,000,000 initial supply.
+  - `contracts/TasteDailyDistributor.sol`: Daily 10,000 $TASTE emission pool implementing **Mechanism B (User Claim)** with Oracle ECDSA signature verification.
+  - `contracts/TasteChainRegistry.sol`: Gas-optimized Pioneer slot registry (slots 1–3) and anti-replay slip deduplication via `keccak256(placeId)`.
+  - `contracts/TasteChainBounty.sol`: Multi-asset merchant escrow supporting both native AVAX and $TASTE token bounties with direct reviewer payouts.
+  - `contracts/TastePromotionEscrow.sol`: Circular gastronomy promotion escrow enforcing an 80% merchant transfer and a 20% deflationary burn to dead address (`0x0...dEaD`).
+- **Hardhat 2.22 Tooling & Config**:
+  - `hardhat.config.js`: Configured for Solidity 0.8.24 with optimizer (200 runs) and Avalanche Fuji Testnet RPC.
+  - `scripts/deploy-fuji.js`: Full deployment pipeline deploying all 5 contracts, granting minter roles, and exporting JSON artifacts.
+- **Contract Abstraction Layer**:
+  - `src/config/contracts.ts`: Type-safe contract addresses, ABIs, and Avalanche Fuji network definitions.
+  - `src/config/contracts.json`: Deployment addresses artifact.
+- **Automated Verification Suite (`test/TasteContracts.test.js`)**:
+  - 12/12 tests passed (100% passing rate):
+    - `T2.1`: Initial 1M $TASTE mint, authorized minter control, and user token burning.
+    - `T2.2`: Daily 10K pool finalization, pro-rata claim calculation with Oracle signature, and duplicate claim rejection.
+    - `T2.3`: Pioneer slot assignment (slots 1, 2, 3 assigned; 4th rejected), slip hash replay rejection, and rating boundaries.
+    - `T2.4`: Merchant native AVAX and $TASTE token funding and claim execution.
+    - `T2.5`: Promotion redemption with exact 80% merchant transfer and 20% dead address burn.
+
+---
+
 ## [3.1.0] - 2026-10-15 (Phase 1: Project Scaffolding & Database Service Layer)
 
 ### Added
