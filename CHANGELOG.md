@@ -65,3 +65,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Initialized Git repository targeting `https://github.com/0xta/Uhackathon2026`.
   - Added `.gitignore` and `CHANGELOG.md`.
   - Added detailed 6-phase implementation and verification plan in `IMPLEMENTATION_PLAN.md`.
+- **Tokenomics Specification Rules**:
+  - Defined Daily Activity Points: Front-shop QR scan = 3 pts, Food photo (pHash) = 1 pt, Receipt OCR (< 150 THB = 1 pt, >= 150 THB = 3 pts).
+  - Selected Token Distribution Mechanism B: User-initiated Daily Claim via Web3 transaction on `TasteDailyDistributor.sol`.
+  - Updated PostgreSQL column defaults (`in_store_qr_checkins.epoch_points_awarded` default 3, `verified_reviews.epoch_points_awarded`).

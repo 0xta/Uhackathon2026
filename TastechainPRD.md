@@ -203,7 +203,7 @@ CREATE TABLE IF NOT EXISTS in_store_qr_checkins (
     gps_longitude NUMERIC(10, 7),
     gps_distance_meters NUMERIC(8, 2),      -- ระยะห่างจากร้าน (ต้อง < 100 เมตร)
     dispatched_voice_id UUID REFERENCES shop_voices(id),
-    epoch_points_awarded INT DEFAULT 1,     -- แต้มสำหรับหารสัดส่วน 10K $TASTE ประจำวัน
+    epoch_points_awarded INT DEFAULT 3,     -- แต้มสำหรับหารสัดส่วน 10K $TASTE ประจำวัน (สแกน QR หน้าร้าน: 3 แต้ม)
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -495,20 +495,44 @@ contract TasteDailyDistributor {
         emit EpochFinalized(dayIndex, totalPoints, DAILY_EMISSION);
     }
 
-    /// @notice Distribute reward directly to reviewer via Oracle or User Claim
-    function distributeReward(uint256 dayIndex, address user, uint256 userPoints) external onlyOracle {
+    /// @notice Mechanism B: User claims their pro-rata reward directly using an Oracle-signed authorization
+    function claimReward(
+        uint256 dayIndex,
+        uint256 userPoints,
+        bytes calldata signature
+    ) external {
         EpochData storage epoch = epochs[dayIndex];
         require(epoch.finalized, "Epoch not finalized");
-        require(!hasClaimed[dayIndex][user], "Already claimed");
-        require(userPoints <= epoch.totalPoints, "Invalid user points");
+        require(!hasClaimed[dayIndex][msg.sender], "Already claimed");
+        require(userPoints > 0 && userPoints <= epoch.totalPoints, "Invalid user points");
 
-        hasClaimed[dayIndex][user] = true;
+        // Verify oracle signature: keccak256(dayIndex, userAddress, userPoints, chainId, contractAddress)
+        bytes32 messageHash = keccak256(abi.encodePacked(dayIndex, msg.sender, userPoints, block.chainid, address(this)));
+        bytes32 ethSignedMessageHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", messageHash));
+        
+        address signer = recoverSigner(ethSignedMessageHash, signature);
+        require(signer == oracleAddress, "Invalid oracle signature");
+
+        hasClaimed[dayIndex][msg.sender] = true;
 
         // Pro-Rata Formula: (userPoints * 10,000 TASTE) / totalPoints
         uint256 userReward = (userPoints * epoch.emissionAmount) / epoch.totalPoints;
-        tasteToken.mint(user, userReward);
+        tasteToken.mint(msg.sender, userReward);
 
-        emit RewardClaimed(dayIndex, user, userReward);
+        emit RewardClaimed(dayIndex, msg.sender, userReward);
+    }
+
+    function recoverSigner(bytes32 _ethSignedMessageHash, bytes memory _sig) internal pure returns (address) {
+        require(_sig.length == 65, "Invalid signature length");
+        bytes32 r;
+        bytes32 s;
+        uint8 v;
+        assembly {
+            r := mload(add(_sig, 32))
+            s := mload(add(_sig, 64))
+            v := byte(0, mload(add(_sig, 96)))
+        }
+        return ecrecover(_ethSignedMessageHash, v, r, s);
     }
 
     function setOracle(address _newOracle) external onlyOwner {
@@ -630,19 +654,27 @@ sequenceDiagram
 
 ---
 
-### 7.3 Flow 3: Dynamic Reward Engine (Daily 10,000 $TASTE Emission)
+### 7.3 Flow 3: Dynamic Reward Engine (Daily 10,000 $TASTE Emission) — Mechanism B (Daily Claim)
 
-*   **FR-3.1 Emission Concept:**
+*   **FR-3.1 Emission Concept & Activity Points:**
     *   ในแต่ละวัน (00:00 - 23:59 UTC) ระบบมีโควต้าเหรียญแจกจ่ายคงที่ **10,000 $TASTE**
-    *   ผู้ใช้สามารถสะสม "คะแนนรีวิว" (Review Points) ได้จาก:
-        1. สแกน QR หน้าร้าน (Tier 1.5): **1 แต้ม**
-        2. ถ่ายรูปอาหารสด + GPS (Tier 2): **3 แต้ม**
-        3. อัปโหลดสลิป PromptPay ยืนยันยอดจริง (Tier 3): **5 แต้ม**
+    *   ผู้ใช้สะสม **"คะแนนความพยายาม" (Daily Activity Points)** ในแต่ละวันได้จาก:
+        1. **สแกน QR หน้าร้าน:** **3 แต้ม**
+        2. **ถ่ายรูปอาหารสด (pHash):** **1 แต้ม**
+        3. **อัปโหลดใบเสร็จ (OCR ผ่าน):**
+           * มูลค่า `< 150` บาท: **1 แต้ม**
+           * มูลค่า `>= 150` บาท: **3 แต้ม**
 *   **FR-3.2 Dynamic Game Theory (Mining Formula):**
-    $$\text{User Token Reward} = 10,000 \times \frac{\text{User Points Today}}{\sum \text{All Users Points Today}}$$
+    $$\text{User Token Reward} = 10,000 \times \frac{\text{User Daily Activity Points}}{\sum \text{All Users Activity Points Today}}$$
     *   *กรณีวันธรรมดาคนรีวิวน้อย:* สมมติทั้งวันมีคนรวมกัน 200 แต้ม $\rightarrow$ 1 แต้มมีค่า = $\frac{10,000}{200} = 50\ \text{\$TASTE}$ (จูงใจให้คนตระเวนกินวันธรรมดา)
     *   *กรณีวันหยุดคนรีวิวเยอะ:* สมมติทั้งวันมีคนรวมกัน 2,000 แต้ม $\rightarrow$ 1 แต้มมีค่า = $\frac{10,000}{2,000} = 5\ \text{\$TASTE}$
-*   **FR-3.3 Daily Midnight Settlement:** Cron Job เวลาเที่ยงคืน คำนวณสรุปยอดลง `user_epoch_shares` และเปิดให้ผู้ใช้กด Claim เข้ากระเป๋า หรือโอนตรงผ่าน Oracle
+*   **FR-3.3 Distribution Mechanism: Option B (Daily Claim - ผู้ใช้กดเคลมเอง):**
+    *   **ระหว่างวัน (Mining Phase):** แต้มกิจกรรมถูกบันทึกลงฐานข้อมูล (`in_store_qr_checkins`, `verified_reviews`, `user_epoch_shares`) และแสดงแต้มสะสมพร้อมยอดประมาณการเหรียญแบบ Real-time บน Dashboard (`/mining`)
+    *   **สิ้นวัน (Finalization Phase):** เมื่อผ่านพ้น 23:59 UTC หรือผู้ดูแล/กรรมการสั่งปิดรอบ ระบบจะบันทึก `finalizeEpoch(dayIndex, totalPoints)` ขึ้น Smart Contract
+    *   **การกดเคลม (Claim Phase):** ผู้ใช้เข้ามาที่หน้า Dashboard (`/mining` หรือ `/profile`) กดปุ่ม **"⚡ เคลมรางวัลประจำวัน (Claim My $TASTE)"**
+        *   Client ส่งคำขอรับ Signature รับรองคะแนนจาก Oracle
+        *   ผู้ใช้เซ็นธุรกรรม `claimReward(dayIndex, userPoints, signature)` บนกระเป๋า (Wagmi / Burner Wallet)
+        *   Smart Contract `TasteDailyDistributor.sol` ทำการ Mint / โอนเหรียญ $TASTE ตรงเข้ากระเป๋าของผู้ใช้ทันที!
 
 ---
 

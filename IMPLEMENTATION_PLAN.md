@@ -183,9 +183,9 @@ git push origin main
 ### Phase 5: Token Economics, Merchant Bounties & Circular Promotions
 
 #### Objectives
-- Implement Daily 10,000 `$TASTE` Epoch Engine:
-  - Daily cron job aggregating user points (QR scan = 1 pt, Photo = 3 pts, Slip = 5 pts).
-  - Pro-rata reward calculation and claim interface (`/mining`).
+- Implement Daily 10,000 `$TASTE` Epoch Engine (**Mechanism B: User Daily Claim**):
+  - Point rules: Front-shop QR scan = **3 pts**, Food Photo (pHash) = **1 pt**, Receipt OCR (< 150 THB = **1 pt**, >= 150 THB = **3 pts**).
+  - Pro-rata daily reward calculation and user-initiated Web3 claim interface (`/mining` & `/profile`).
 - Implement Merchant Bounty Dashboard (`/place/[placeId]/bounty`):
   - Funding campaigns (e.g., 100,000 `$TASTE` for 30 days).
   - Real-time remaining budget and claims tracker.
@@ -204,7 +204,7 @@ git push origin main
 #### Verification & Test Strategy
 | Test Case | Description | Expected Result |
 | :--- | :--- | :--- |
-| **T5.1 Epoch Math** | 2 users with 1 pt and 3 pts in 10,000 pool | User A gets 2,500 `$TASTE`, User B gets 7,500 `$TASTE` |
+| **T5.1 Epoch Math** | User A with 3 pts (QR) and User B with 4 pts (Photo + Receipt >=150 THB) in 10,000 pool | Pro-rata split: User A claims ~4,285.71 `$TASTE`, User B claims ~5,714.28 `$TASTE` via Mechanism B |
 | **T5.2 Bounty Escrow** | Merchant funds 100K `$TASTE` bounty | Contract balance increases; claims deduct accurately |
 | **T5.3 80/20 Burn** | Customer redeems 500 `$TASTE` discount | 400 `$TASTE` to merchant, 100 `$TASTE` burned |
 | **T5.4 DB Sync** | Check `merchant_promotions` & `promotion_redemptions` | Records match on-chain tx hashes exactly |
