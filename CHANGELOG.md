@@ -50,6 +50,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.5.0] - 2026-10-15 (Phase 5: Token Economics, Mechanism B Oracle Signatures, & Circular Promotions)
+
+### Added
+- **Daily 10,000 $TASTE Pool Emission & Dynamic Pro-Rata Math (`src/lib/services/epoch.ts`)**:
+  - Dynamically calculates user reward share based on cumulative points across all participants for that epoch.
+  - Guarantees total daily emission sums to exactly 10,000 $TASTE.
+- **Mechanism B On-Chain User Claim Oracle (`src/lib/services/claimSignature.ts`)**:
+  - Generates EIP-191 ECDSA signatures matching `TasteDailyDistributor.claimReward(epochDate, points, signature)`.
+  - Type-safe uint256 conversion for YYYYMMDD epochs.
+  - REST endpoint `GET /api/rewards/claim-signature` returning cryptographic signature, reward in Wei, and contract addresses.
+  - Persistence of claimed states and transaction hashes in `user_epoch_shares`.
+- **Circular Gastronomy Promotions & Deflationary Burn (`src/lib/services/promotions.ts`)**:
+  - 199 $TASTE Tier 1 Voucher: 80% to merchant (159.2 $TASTE), 20% deflationary burn (39.8 $TASTE).
+  - 500 $TASTE Tier 2 VIP Voucher: 80% to merchant (400 $TASTE), 20% deflationary burn (100 $TASTE).
+  - Auto-seeding of promotions in `merchant_promotions` and redemption code generator (`TASTE-XXX-XXXX-XXXX`).
+  - REST endpoint `POST /api/promotions/redeem`.
+- **Automated Verification Suite (`tests/phase5-tokenomics.test.ts`)**:
+  - 11/11 tests passed (100% passing rate):
+    - `T5.1`: Single-user and multi-user pro-rata distribution summing to 10,000 $TASTE.
+    - `T5.2`: ECDSA cryptographic signature generation and recovery to Oracle address.
+    - `T5.3`: Exact 80/20 split and burn verification for 199 and 500 $TASTE vouchers.
+    - `T5.4`: On-chain claim state persistence.
+
+---
+
 ## [3.4.0] - 2026-10-15 (Phase 4: OpenAI Vision Slip OCR & Proof-of-Visit Pipeline)
 
 ### Added
