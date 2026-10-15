@@ -5,6 +5,7 @@ import Link from "next/link";
 import { PlaceDetail } from "@/lib/services/places";
 import QRScannerModal from "./QRScannerModal";
 import FrontShopQRModal from "./FrontShopQRModal";
+import ReviewModal from "./ReviewModal";
 import AudioGreetingPlayer, { VoiceGreetingData } from "./AudioGreetingPlayer";
 
 interface PlaceDetailClientProps {
@@ -14,6 +15,7 @@ interface PlaceDetailClientProps {
 export default function PlaceDetailClient({ place }: PlaceDetailClientProps) {
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [isQROpen, setIsQROpen] = useState(false);
+  const [isReviewOpen, setIsReviewOpen] = useState(false);
   const [activeGreeting, setActiveGreeting] = useState<VoiceGreetingData | null>(null);
   const [pointsEarned, setPointsEarned] = useState(3);
   const [loadingVoice, setLoadingVoice] = useState(false);
@@ -58,6 +60,21 @@ export default function PlaceDetailClient({ place }: PlaceDetailClientProps) {
         scriptText: checkinData.voiceGreeting.scriptText,
         audioUrl: checkinData.voiceGreeting.audioUrl,
         durationSeconds: checkinData.voiceGreeting.durationSeconds,
+      });
+    }
+  };
+
+  // Review Submission Success
+  const handleReviewSuccess = (reviewResult: any) => {
+    setPointsEarned(reviewResult.totalPointsAwarded || 4);
+    if (reviewResult.dispatchedVoice) {
+      setActiveGreeting({
+        id: reviewResult.dispatchedVoice.id,
+        slotNumber: reviewResult.dispatchedVoice.slot_number || reviewResult.dispatchedVoice.slotNumber,
+        title: reviewResult.dispatchedVoice.title,
+        scriptText: reviewResult.dispatchedVoice.script_text || reviewResult.dispatchedVoice.scriptText,
+        audioUrl: reviewResult.dispatchedVoice.audio_url || reviewResult.dispatchedVoice.audioUrl,
+        durationSeconds: reviewResult.dispatchedVoice.duration_seconds || reviewResult.dispatchedVoice.durationSeconds,
       });
     }
   };
@@ -123,6 +140,14 @@ export default function PlaceDetailClient({ place }: PlaceDetailClientProps) {
 
           {/* Action Button Row */}
           <div className="flex flex-wrap items-center gap-3 mt-6 pt-4 border-t border-base-300">
+            <button
+              onClick={() => setIsReviewOpen(true)}
+              className="btn btn-warning gap-2 font-bold shadow-md text-black"
+            >
+              <span>✍️</span>
+              <span>เขียนรีวิว &amp; ขุดเหรียญ</span>
+            </button>
+
             <button
               onClick={() => setIsScannerOpen(true)}
               className="btn btn-primary gap-2 shadow-md text-white font-bold"
@@ -462,6 +487,22 @@ export default function PlaceDetailClient({ place }: PlaceDetailClientProps) {
         venueAddress={place.address}
         isOpen={isQROpen}
         onClose={() => setIsQROpen(false)}
+      />
+
+      <ReviewModal
+        placeId={place.place_id}
+        venueName={place.name}
+        isPioneer={place.pioneers.some(
+          (p) => p.pioneer_address.toLowerCase() === "0x70997970c51812dc3a010c7d01b50e0d17dc79c8"
+        )}
+        pioneerSlot={
+          place.pioneers.find(
+            (p) => p.pioneer_address.toLowerCase() === "0x70997970c51812dc3a010c7d01b50e0d17dc79c8"
+          )?.slot_index || null
+        }
+        isOpen={isReviewOpen}
+        onClose={() => setIsReviewOpen(false)}
+        onSuccess={handleReviewSuccess}
       />
 
       <AudioGreetingPlayer

@@ -50,6 +50,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.4.0] - 2026-10-15 (Phase 4: OpenAI Vision Slip OCR & Proof-of-Visit Pipeline)
+
+### Added
+- **OpenAI Vision PromptPay Slip OCR Pipeline (`src/lib/services/slipOcr.ts`)**:
+  - Structured extraction of Thai PromptPay bank transfer receipts (SCB, K PLUS, Krungthai NEXT).
+  - Extracts numeric amount (THB), sender name, receiver name, transaction date, and reference ID.
+  - Generates 32-byte standardized `slip_ref_hash` (`sha256(ref_id)`).
+  - Anti-replay fraud detection: strictly blocks reused payment slips across all venues (`DUPLICATE_SLIP`).
+- **Food Photo Freshness & Perceptual Hash (`src/lib/services/phash.ts`)**:
+  - High-performance perceptual difference hashing (64-bit dHash via `sharp`).
+  - Bitwise Hamming distance computation detecting identical or compressed duplicate photo submissions across reviews.
+- **Dynamic Activity Points with Pioneer 2x Multiplier (`src/lib/services/reviews.ts`)**:
+  - Implemented exact user specification:
+    - Food photo (pHash): +1 point
+    - Slip OCR < 150 THB: +1 point
+    - Slip OCR $\ge 150$ THB: +3 points
+    - **Pioneer 2x Multiplier**: If reviewer is confirmed as Pioneer Slot 1, 2, or 3, review points are doubled (e.g. 4 base pts $\rightarrow$ 8 points!).
+  - Auto-claims Pioneer slots: First 3 reviewers for any Bangkok venue automatically claim Pioneer Slots #1, #2, and #3 into `pioneer_claims`.
+  - Daily review limits: **Max 3 reviews per venue per day** and **Max 10 reviews total per day** across all venues.
+- **REST Endpoints & Components**:
+  - `POST /api/reviews/submit`: Production endpoint processing verified reviews with pHash, slip OCR, Pioneer slot claims, and shop voice dispatch.
+  - `src/components/ReviewModal.tsx`: Interactive review submission modal with live points calculator, Pioneer 2x badge, slip amount toggles, and instant celebratory voice greeting trigger.
+- **Automated Verification Suite (`tests/phase4-review-ocr.test.ts`)**:
+  - 16/16 tests passed (100% passing rate):
+    - `T4.1`: Slip OCR points threshold (<150 THB = 1 pt, $\ge 150$ THB = 3 pts).
+    - `T4.2`: Perceptual 64-bit dHash generation and Hamming distance verification.
+    - `T4.3`: Pioneer 2x multiplier math (1x for standard users, 2x for Pioneers).
+    - `T4.4`: Automatic Pioneer slot claiming for first 3 reviewers and 2x points on subsequent visits.
+    - `T4.5`: Anti-replay slip fraud prevention (`DUPLICATE_SLIP`).
+    - `T4.6`: Daily review quotas (Max 3/shop/day rejected with 429).
+
+---
+
 ## [3.3.0] - 2026-10-15 (Phase 3: ElevenLabs Voice Studio & Front-Shop QR Oracle)
 
 ### Added
