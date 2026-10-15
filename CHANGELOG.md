@@ -50,6 +50,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.6.0] - 2026-10-15 (Phase 6: 1-Click Judge Experience & End-to-End Demo Polish)
+
+### Added
+- **1-Click Judge Demo Drawer & Floating Bar (`src/components/JudgeDemoBar.tsx`)**:
+  - Global floating evaluation launcher equipped with ephemeral test burner wallet (`0x7099...79C8`).
+  - 5-Step Automated Guided Tour testing:
+    1. Bangkok venue search (Ban That Thong / Silom / Ari).
+    2. Front-shop QR scan with $\le 100\text{m}$ geofencing and ElevenLabs greeting audio.
+    3. Proof-of-visit review with PromptPay slip OCR ($\ge 150$ THB = 3 pts) + fresh food photo (1 pt).
+    4. Pioneer Slot auto-claim and 2x points multiplier verification.
+    5. Daily 10,000 $TASTE mining pool claim via Mechanism B with Oracle ECDSA signature.
+    6. Circular gastronomy promotion redemption with 80% merchant payout and 20% deflationary burn.
+  - Real-time terminal log viewer embedded in the drawer for live debugging and hackathon demonstration.
+- **Full End-to-End Test Suite (`tests/phase6-e2e-demo.test.ts`)**:
+  - 13/13 tests passed covering all protocol components:
+    - `E2E-1`: Multi-criteria Bangkok search.
+    - `E2E-2`: 3-voice synthesis and random 1-in-3 dispatch.
+    - `E2E-3`: Front-shop QR proximity check-in (+3 pts).
+    - `E2E-4`: Pioneer Slot #1 auto-claim on first review.
+    - `E2E-5`: Pioneer 2x multiplier doubling review points (4 pts $\rightarrow$ 8 pts).
+    - `E2E-6`: Mechanism B Oracle ECDSA claim signature generation and verification.
+    - `E2E-7`: 199 $TASTE promotion redemption with 80/20 burn.
+    - `E2E-8`: Daily rate limiting (Max 3/shop/day rejected with 429).
+- **Master Test Runner (`npm run test:all`)**:
+  - Unified script running all 6 test suites with 91/91 tests passing (100% pass rate).
+
+---
+
 ## [3.5.0] - 2026-10-15 (Phase 5: Token Economics, Mechanism B Oracle Signatures, & Circular Promotions)
 
 ### Added

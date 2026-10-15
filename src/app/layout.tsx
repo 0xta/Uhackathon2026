@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Link from "next/link";
 import { Utensils, Coins, Sparkles, User, MapPin } from "lucide-react";
+import JudgeDemoBar from "@/components/JudgeDemoBar";
 
 export const metadata: Metadata = {
   title: "TasteChain BKK — The AI-Powered Web3 Gastronomy Protocol",
@@ -99,6 +100,9 @@ export default function RootLayout({
             </div>
           </div>
         </footer>
+
+        {/* 1-Click Judge Guided Demo Bar */}
+        <JudgeDemoBar />
       </body>
     </html>
   );
